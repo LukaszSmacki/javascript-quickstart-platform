@@ -1,88 +1,58 @@
-<!DOCTYPE html>
-<html>
+ <!DOCTYPE html>
 <head>
-  <title>PubNub JavaScript SDK QuickStart</title>
+<meta charset="utf-8"/>
+<title>Hello, PubNub</title>
+<!-- Update this block with the URL to the content delivery network version of the SDK -->
+<script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.29.9.js"></script>
 </head>
-
 <body>
-<div>
-  <strong>Earth:</strong> <input id="update-text" type="input" placeholder="enter update for Earth here"/>
-  <input id="publish-button" type="submit" value="Submit Update to The Guide"/>
-  <p><strong>Updates</strong></p>
-  <div id="messages-top"/>
-</div>
-</body>
-
-<script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.27.4.min.js"></script>
-
 <script>
-  const messagesTop = document.getElementById('messages-top');
-  const updateText = document.getElementById('update-text');
-  const sendButton = document.getElementById('publish-button');
-  sendButton.addEventListener('click', () => {submitUpdate(theEntry, updateText.value)});
 
-  const clientUUID = PubNub.generateUUID();
-  const theChannel = 'the_guide';
-  const theEntry = 'Earth';
+function letsGo() {
 
-  const pubnub = new PubNub({
-    // replace the following with your own publish and subscribe keys
-    publishKey: 'pub-c-79666728-333e-43c7-96fe-8279ad8074c7',
-    subscribeKey: 'pub-c-79666728-333e-43c7-96fe-8279ad8074c7',
-    uuid: clientUUID
-  });
+    // Update this block with your publish/subscribe keys
+    pubnub = new PubNub({
+        publishKey : "pub-c-79666728-333e-43c7-96fe-8279ad8074c7",
+        subscribeKey : "sub-c-fcd44a56-43d5-11eb-a73a-1eec528e8f1f",
+        uuid: "Lukasz"
+    })
 
-  pubnub.addListener({
-    message: function(event) {
-      displayMessage('[MESSAGE: received]',
-        event.message.entry + ': ' + event.message.update);
-    },
-    presence: function(event) {
-      displayMessage('[PRESENCE: ' + event.action + ']',
-        'uuid: ' + event.uuid + ', channel: ' + event.channel);
-    },
-    status: function(event) {
-      displayMessage('[STATUS: ' + event.category + ']',
-        'connected to channels: ' + event.affectedChannels);
-
-      if (event.category == 'PNConnectedCategory') {
-        submitUpdate(theEntry, 'Harmless.');
-      }
+    function publishSampleMessage() {
+        console.log("Publish to a channel 'hello_world'");
+        // With the right payload, you can publish a message, add a reaction to a message, 
+        // send a push notification, or send a small payload called a signal.
+        var publishPayload = {
+            channel : "hello_world",
+            message: {
+                title: "greeting",
+                description: "This is my first message!"
+            }
+        }
+        pubnub.publish(publishPayload, function(status, response) {
+            console.log(status, response);
+        })
     }
-  });
 
-  pubnub.subscribe({
-    channels: ['the_guide'],
-    withPresence: true
-  });
+    pubnub.addListener({
+        status: function(statusEvent) {
+            if (statusEvent.category === "PNConnectedCategory") {
+                publishSampleMessage();
+            }
+        },
+        message: function(msg) {
+            console.log(msg.message.title);
+            console.log(msg.message.description);
+        },
+        presence: function(presenceEvent) {
+            // This is where you handle presence. Not important for now :)
+        }
+    })
 
-  submitUpdate = function(anEntry, anUpdate) {
-    pubnub.publish({
-      channel : theChannel,
-      message : {'entry' : anEntry, 'update' : anUpdate}
-    },
-    function(status, response) {
-      if (status.error) {
-        console.log(status)
-      }
-      else {
-        displayMessage('[PUBLISH: sent]',
-          'timetoken: ' + response.timetoken);
+    console.log("Subscribing...");
 
-        updateText.value="";
-      }
+    pubnub.subscribe({
+        channels: ['hello_world'] 
     });
-  };
-
-  displayMessage = function(messageType, aMessage) {
-    let pmessage = document.createElement('p');
-    let br = document.createElement('br');
-
-    messagesTop.after(pmessage);
-    pmessage.appendChild(document.createTextNode(messageType));
-    pmessage.appendChild(br);
-    pmessage.appendChild(document.createTextNode(aMessage));
-  }
-
+};
 </script>
-</html>
+</body>
